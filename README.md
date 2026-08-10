@@ -4,8 +4,8 @@
 
 Built for the NIGCOMSAT Accelerator 3.0 hackathon — Track C: Public Health Intelligence.
 
-**Live demo:** `TODO — add your deployed frontend URL here`
-**API docs (Swagger):** `TODO — add your deployed backend URL here` + `/api-docs`
+**Live demo:** `https://c3hkth-team1.vercel.app`
+**API docs (Swagger):** `https://aquawatch-backend-699p.onrender.com/api-docs`
 
 ---
 
