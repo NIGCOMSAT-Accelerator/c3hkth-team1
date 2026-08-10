@@ -5,7 +5,8 @@ import {
   ChannelBreakdownChart,
   RiskDistributionChart,
 } from "@/components/AnalyticsCharts";
-import { fetchAlertAnalytics, fetchWards } from "@/lib/api";
+import { RiskRefreshProgress } from "@/components/RiskRefreshProgress";
+import { fetchAlertAnalytics, fetchOwnProfile, fetchWards } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AnalyticsPage() {
@@ -19,7 +20,11 @@ export default async function AnalyticsPage() {
   }
 
   const accessToken = session.access_token;
-  const [wards, analytics] = await Promise.all([fetchWards(accessToken), fetchAlertAnalytics(accessToken)]);
+  const [wards, analytics, profile] = await Promise.all([
+    fetchWards(accessToken),
+    fetchAlertAnalytics(accessToken),
+    fetchOwnProfile(accessToken),
+  ]);
 
   const distribution = {
     low: wards.filter((ward) => ward.cachedRiskLabel === "low").length,
@@ -35,6 +40,12 @@ export default async function AnalyticsPage() {
       <p className="mt-1 text-sm text-slate-soft">
         A rolling view of ward risk and alert delivery across the wards you oversee.
       </p>
+
+      {profile?.role === "government" ? (
+        <div className="mt-6">
+          <RiskRefreshProgress wardIds={wards.map((ward) => ward.id)} />
+        </div>
+      ) : null}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <RiskDistributionChart distribution={distribution} />

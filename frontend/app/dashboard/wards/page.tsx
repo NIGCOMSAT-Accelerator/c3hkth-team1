@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 
+import { RiskRefreshProgress } from "@/components/RiskRefreshProgress";
 import { StatCard } from "@/components/StatCard";
 import { WardTable } from "@/components/WardTable";
-import { cachedRiskFromWard, fetchAlertStats, fetchWards, type WardRiskAssessment } from "@/lib/api";
+import { cachedRiskFromWard, fetchAlertStats, fetchOwnProfile, fetchWards, type WardRiskAssessment } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardPage() {
@@ -16,7 +17,11 @@ export default async function DashboardPage() {
   }
 
   const accessToken = session.access_token;
-  const [wards, alertStats] = await Promise.all([fetchWards(accessToken), fetchAlertStats(accessToken)]);
+  const [wards, alertStats, profile] = await Promise.all([
+    fetchWards(accessToken),
+    fetchAlertStats(accessToken),
+    fetchOwnProfile(accessToken),
+  ]);
 
   const assessments = wards.map((ward) => ({ ward, risk: cachedRiskFromWard(ward) }));
 
@@ -35,6 +40,12 @@ export default async function DashboardPage() {
       <p className="mt-1 text-sm text-slate-soft">
         Updated live from the latest satellite and rainfall observations.
       </p>
+
+      {profile?.role === "government" ? (
+        <div className="mt-6">
+          <RiskRefreshProgress wardIds={wards.map((ward) => ward.id)} />
+        </div>
+      ) : null}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <StatCard value={String(wards.length)} label="Wards monitored" />

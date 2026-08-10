@@ -136,6 +136,83 @@ describe("POST /wards/risk/refresh-cache", () => {
   });
 });
 
+describe("POST /wards/risk/refresh-batch", () => {
+  it("returns 401 without an Authorization header", async () => {
+    const app = buildApp();
+
+    const response = await request(app).post("/wards/risk/refresh-batch").send({ wardIds: [sampleWard.id] });
+
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 403 for a non-government account", async () => {
+    const app = buildApp({
+      userProfilesRepository: createFakeUserProfilesRepository({
+        getById: async () => ({ ...governmentProfile, role: "ward_official", wardId: sampleWard.id }),
+      }),
+    });
+
+    const response = await request(app)
+      .post("/wards/risk/refresh-batch")
+      .set("Authorization", AUTH_HEADER)
+      .send({ wardIds: [sampleWard.id] });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("refreshes exactly the given ward ids and returns a batch summary", async () => {
+    let receivedIds: string[] = [];
+    const app = buildApp({
+      wardsRepository: createFakeWardsRepository({
+        updateCachedRisk: async () => undefined,
+      }),
+      riskService: createFakeRiskService(),
+    });
+
+    const response = await request(app)
+      .post("/wards/risk/refresh-batch")
+      .set("Authorization", AUTH_HEADER)
+      .send({ wardIds: [sampleWard.id, otherWard.id] });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual({ wardsChecked: 2, wardsUpdated: 2, wardsFailed: 0 });
+  });
+
+  it("rejects an empty wardIds array", async () => {
+    const app = buildApp();
+
+    const response = await request(app)
+      .post("/wards/risk/refresh-batch")
+      .set("Authorization", AUTH_HEADER)
+      .send({ wardIds: [] });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects a batch larger than 50", async () => {
+    const app = buildApp();
+    const tooMany = Array.from({ length: 51 }, () => sampleWard.id);
+
+    const response = await request(app)
+      .post("/wards/risk/refresh-batch")
+      .set("Authorization", AUTH_HEADER)
+      .send({ wardIds: tooMany });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects non-uuid entries", async () => {
+    const app = buildApp();
+
+    const response = await request(app)
+      .post("/wards/risk/refresh-batch")
+      .set("Authorization", AUTH_HEADER)
+      .send({ wardIds: ["not-a-uuid"] });
+
+    expect(response.status).toBe(400);
+  });
+});
+
 describe("GET /wards/alerts/stats", () => {
   it("returns aggregated counts for the caller's scoped wards", async () => {
     const app = buildApp({

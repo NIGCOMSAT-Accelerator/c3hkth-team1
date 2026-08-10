@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-import { RefreshRiskCacheButton } from "@/components/RefreshRiskCacheButton";
 import { ThresholdSettingsForm } from "@/components/ThresholdSettingsForm";
 import { fetchOwnProfile } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
@@ -33,19 +32,6 @@ export default async function SettingsPage() {
           systemDefault={SYSTEM_DEFAULT_THRESHOLD}
         />
       </div>
-
-      {profile?.role === "government" ? (
-        <div className="mt-8 max-w-md rounded-[var(--radius-card)] border border-ink/8 bg-white p-6 shadow-[var(--shadow-panel)]">
-          <h2 className="font-display text-lg font-semibold text-ink">Risk score cache</h2>
-          <p className="mt-1 text-sm text-slate-soft">
-            Ward risk scores are cached for speed and refreshed automatically on a schedule. Use this
-            to force an immediate refresh — this can take a minute or two for all wards.
-          </p>
-          <div className="mt-4">
-            <RefreshRiskCacheButton />
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

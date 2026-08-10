@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 
 import { LiveIndicator } from "@/components/LiveIndicator";
 import { RiskPill } from "@/components/RiskPill";
+import { RiskRefreshProgress } from "@/components/RiskRefreshProgress";
 import { StatCard } from "@/components/StatCard";
-import { cachedRiskFromWard, fetchAlertStats, fetchRecentAlerts, fetchWards } from "@/lib/api";
+import { cachedRiskFromWard, fetchAlertStats, fetchOwnProfile, fetchRecentAlerts, fetchWards } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function OverviewPage() {
@@ -18,10 +19,11 @@ export default async function OverviewPage() {
   }
 
   const accessToken = session.access_token;
-  const [wards, alertStats, recentAlerts] = await Promise.all([
+  const [wards, alertStats, recentAlerts, profile] = await Promise.all([
     fetchWards(accessToken),
     fetchAlertStats(accessToken),
     fetchRecentAlerts(accessToken),
+    fetchOwnProfile(accessToken),
   ]);
 
   const assessments = wards.map((ward) => ({ ward, risk: cachedRiskFromWard(ward) }));
@@ -42,6 +44,12 @@ export default async function OverviewPage() {
         </div>
         <LiveIndicator />
       </div>
+
+      {profile?.role === "government" ? (
+        <div className="mt-6">
+          <RiskRefreshProgress wardIds={wards.map((ward) => ward.id)} />
+        </div>
+      ) : null}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard value={String(wards.length)} label="Wards monitored" />

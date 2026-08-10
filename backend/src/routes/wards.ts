@@ -6,8 +6,8 @@ import type { RiskService } from "../services/riskService.js";
 import { canAccessWard, type WardsRepository } from "../db/wardsRepository.js";
 import type { AlertsRepository } from "../db/alertsRepository.js";
 import type { AuditLogsRepository } from "../db/auditLogsRepository.js";
-import { refreshWardRiskCache } from "../jobs/refreshWardRiskCache.js";
-import { notificationsQuerySchema, wardIdParamSchema } from "../schemas/validation.js";
+import { refreshWardRiskCache, refreshWardsRiskByIds } from "../jobs/refreshWardRiskCache.js";
+import { notificationsQuerySchema, refreshRiskBatchSchema, wardIdParamSchema } from "../schemas/validation.js";
 
 export function createWardsRouter(
   wardsRepository: WardsRepository,
@@ -39,6 +39,20 @@ export function createWardsRouter(
       }
 
       const summary = await refreshWardRiskCache({ wardsRepository, riskService });
+      res.json({ data: summary });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post("/risk/refresh-batch", async (req, res, next) => {
+    try {
+      if (req.userProfile!.role !== "government") {
+        throw new ForbiddenError("refreshing the risk cache is only available to government accounts");
+      }
+
+      const input = refreshRiskBatchSchema.parse(req.body);
+      const summary = await refreshWardsRiskByIds(input.wardIds, { wardsRepository, riskService });
       res.json({ data: summary });
     } catch (error) {
       next(error);
