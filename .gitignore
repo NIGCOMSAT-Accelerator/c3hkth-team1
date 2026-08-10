@@ -1,0 +1,17 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+ml/data/raw/*
+!ml/data/raw/.gitkeep
+ml/data/processed/*
+!ml/data/processed/.gitkeep
+ml/data/models/*
+!ml/data/models/.gitkeep
+node_modules/
+.next/
+dist/
+build/
+.DS_Store
+frontend/.env.local

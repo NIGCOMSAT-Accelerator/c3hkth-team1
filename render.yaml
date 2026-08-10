@@ -1,0 +1,58 @@
+services:
+  - type: web
+    name: aquawatch-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: "4000"
+      - key: DATABASE_URL
+        sync: false
+      - key: ML_SERVICE_URL
+        sync: false
+      - key: ML_SERVICE_TIMEOUT_MS
+        value: "5000"
+      - key: ALERT_TRIGGER_THRESHOLD
+        value: "0.66"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: TERMII_API_KEY
+        sync: false
+      - key: TERMII_SENDER_ID
+        value: AquaWatch
+      - key: TERMII_BASE_URL
+        value: https://api.ns.termii.com
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_FROM
+        value: "whatsapp:+14155238886"
+      - key: TWILIO_SMS_FROM
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        value: alerts@aquawatch.ng
+      - key: CRON_ENABLED
+        value: "false"
+      - key: CRON_SCHEDULE
+        value: "0 */6 * * *"
+
+  - type: web
+    name: aquawatch-ml-service
+    runtime: python
+    rootDir: ml-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MODEL_PATH
+        value: app/model/malaria_risk_xgb.joblib
+      - key: LOW_RISK_THRESHOLD
+        value: "0.33"
+      - key: HIGH_RISK_THRESHOLD
+        value: "0.66"

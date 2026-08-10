@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0b1b2b;
+  --color-ink-soft: #142a3e;
+  --color-mist: #f3f6f4;
+  --color-mist-dim: #e7ede9;
+  --color-flood: #1c6e8c;
+  --color-flood-light: #4a95af;
+  --color-signal: #e8a33d;
+  --color-signal-soft: #f6d9a8;
+  --color-alert: #d64545;
+  --color-alert-soft: #f3c7c7;
+  --color-moderate: #e8a33d;
+  --color-low: #2f8f5b;
+  --color-slate: #3c4a52;
+  --color-slate-soft: #6b7a82;
+
+  --font-display: var(--font-space-grotesk), "Segoe UI", sans-serif;
+  --font-body: var(--font-plex-sans), "Segoe UI", sans-serif;
+  --font-data: var(--font-plex-mono), ui-monospace, monospace;
+
+  --radius-card: 0.875rem;
+  --radius-pill: 999px;
+
+  --shadow-panel: 0 1px 2px rgba(11, 27, 43, 0.06), 0 12px 32px -16px rgba(11, 27, 43, 0.18);
+  --shadow-panel-dark: 0 1px 2px rgba(0, 0, 0, 0.24), 0 20px 48px -20px rgba(0, 0, 0, 0.55);
+
+  --ease-signal: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-mist);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-feature-settings: "ss01" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background-color: var(--color-signal-soft);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .eyebrow {
+    font-family: var(--font-data);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .contour-field {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(
+      circle at 50% 50%,
+      transparent 0,
+      transparent 68px,
+      rgba(243, 246, 244, 0.05) 69px,
+      rgba(243, 246, 244, 0.05) 70px,
+      transparent 71px,
+      transparent 118px,
+      rgba(243, 246, 244, 0.045) 119px,
+      rgba(243, 246, 244, 0.045) 120px,
+      transparent 121px,
+      transparent 168px,
+      rgba(243, 246, 244, 0.035) 169px,
+      rgba(243, 246, 244, 0.035) 170px
+    );
+  }
+
+  .risk-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: var(--radius-pill);
+    padding: 0.25rem 0.7rem;
+    font-family: var(--font-data);
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+  }
+}
+
+@keyframes signal-pulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.animate-signal-pulse {
+  animation: signal-pulse 2.4s var(--ease-signal) infinite;
+}
