@@ -13,6 +13,19 @@ const ACTION_LABELS: Record<string, string> = {
   "health_worker.registered": "Health worker registered",
 };
 
+function formatMetadata(metadata: Record<string, unknown>): string {
+  const entries = Object.entries(metadata);
+  if (entries.length === 0) return "—";
+
+  return entries
+    .map(([key, value]) => {
+      const stringValue =
+        typeof value === "string" && value.length > 12 ? `${value.slice(0, 8)}…` : String(value);
+      return `${key}: ${stringValue}`;
+    })
+    .join(" · ");
+}
+
 export default async function AuditLogPage({
   searchParams,
 }: {
@@ -60,35 +73,37 @@ export default async function AuditLogPage({
             <p className="font-display text-lg font-semibold text-ink">No activity yet</p>
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-ink/8 bg-mist-dim/60 text-xs uppercase tracking-wide text-slate-soft">
-              <tr>
-                <th className="px-6 py-3 font-medium">Actor</th>
-                <th className="px-6 py-3 font-medium">Action</th>
-                <th className="px-6 py-3 font-medium">Target</th>
-                <th className="px-6 py-3 font-medium">Details</th>
-                <th className="px-6 py-3 font-medium">When</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.logs.map((log) => (
-                <tr key={log.id} className="border-b border-ink/6 last:border-0">
-                  <td className="px-6 py-4 text-slate">{log.actorEmail ?? "System (scheduled)"}</td>
-                  <td className="px-6 py-4 font-medium text-ink">{ACTION_LABELS[log.action] ?? log.action}</td>
-                  <td className="px-6 py-4 text-xs text-slate-soft">
-                    {log.targetType}
-                    {log.targetId ? ` · ${log.targetId.slice(0, 8)}` : ""}
-                  </td>
-                  <td className="px-6 py-4 font-data text-xs text-slate-soft">
-                    {Object.keys(log.metadata).length > 0 ? JSON.stringify(log.metadata) : "—"}
-                  </td>
-                  <td className="px-6 py-4 text-xs text-slate-soft">
-                    {new Date(log.createdAt).toLocaleString()}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="border-b border-ink/8 bg-mist-dim/60 text-xs uppercase tracking-wide text-slate-soft">
+                <tr>
+                  <th className="px-6 py-3 font-medium">Actor</th>
+                  <th className="px-6 py-3 font-medium">Action</th>
+                  <th className="px-6 py-3 font-medium">Target</th>
+                  <th className="px-6 py-3 font-medium">Details</th>
+                  <th className="px-6 py-3 font-medium">When</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {result.logs.map((log) => (
+                  <tr key={log.id} className="border-b border-ink/6 last:border-0">
+                    <td className="px-6 py-4 text-slate">{log.actorEmail ?? "System (scheduled)"}</td>
+                    <td className="px-6 py-4 font-medium text-ink">{ACTION_LABELS[log.action] ?? log.action}</td>
+                    <td className="px-6 py-4 text-xs text-slate-soft">
+                      {log.targetType}
+                      {log.targetId ? ` · ${log.targetId.slice(0, 8)}` : ""}
+                    </td>
+                    <td className="max-w-xs whitespace-normal px-6 py-4 font-data text-xs text-slate-soft">
+                      {formatMetadata(log.metadata)}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-xs text-slate-soft">
+                      {new Date(log.createdAt).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

@@ -14,15 +14,18 @@ function setup() {
 }
 
 function evaluatePixel(sample) {
+  if (sample.dataMask === 0) {
+    return [1, 1, 1];
+  }
+
   let vv_db = 10 * Math.log(sample.VV) / Math.LN10;
   let is_water = vv_db < -17.0;
 
   if (is_water) {
-    return [0.05, 0.35, 0.65];
+    return [0.06, 0.42, 0.78];
   }
 
-  let normalized = Math.min(1, Math.max(0, (vv_db + 25) / 15));
-  return [normalized, normalized, normalized];
+  return [0.94, 0.92, 0.87];
 }
 """
 

@@ -2,9 +2,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import cors from "cors";
 import express, { type Application } from "express";
 import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
 
 import { createAuthMiddleware, createRequireToken } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { openApiSpec } from "./openapi.js";
 import { createAuditLogsRouter } from "./routes/auditLogs.js";
 import { createHealthWorkersRouter } from "./routes/healthWorkers.js";
 import { createPublicReferenceRouter } from "./routes/publicReference.js";
@@ -32,7 +34,15 @@ export interface AppDependencies {
 export function createApp(deps: AppDependencies): Application {
   const app = express();
 
-  app.use(helmet());
+  // Helmet's default Content-Security-Policy blocks Swagger UI's inline scripts/styles -
+  // a well-documented conflict. Scope the exception to just the docs route rather than
+  // disabling CSP for the whole API.
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/api-docs")) {
+      return next();
+    }
+    return helmet()(req, res, next);
+  });
   app.use(cors());
   app.use(express.json());
 
@@ -45,6 +55,11 @@ export function createApp(deps: AppDependencies): Application {
 
   app.get("/health", (_req, res) => {
     res.json({ status: "ok" });
+  });
+
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
+  app.get("/api-docs.json", (_req, res) => {
+    res.json(openApiSpec);
   });
 
   const requireToken = createRequireToken(deps.supabase);

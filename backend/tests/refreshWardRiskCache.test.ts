@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { refreshWardRiskCache } from "../src/jobs/refreshWardRiskCache.js";
+import { refreshWardRiskCache, refreshWardsRiskByIds } from "../src/jobs/refreshWardRiskCache.js";
 import type { RiskService } from "../src/services/riskService.js";
 import type { WardsRepository } from "../src/db/wardsRepository.js";
 import type { Ward, WardFeatures } from "../src/types/domain.js";
@@ -91,5 +91,71 @@ describe("refreshWardRiskCache", () => {
 
     expect(summary).toEqual({ wardsChecked: 0, wardsUpdated: 0, wardsFailed: 0 });
     expect(riskService.assessWard).not.toHaveBeenCalled();
+  });
+});
+
+describe("refreshWardsRiskByIds", () => {
+  it("does not call listWards - only refreshes the given ids", async () => {
+    const wardsRepository = buildWardsRepository([wardA, wardB]);
+    const riskService: RiskService = {
+      assessWard: vi.fn().mockResolvedValue({
+        wardId: wardA.id,
+        riskScore: 0.5,
+        riskLabel: "moderate",
+        contributingFactors: {},
+      }),
+    };
+
+    await refreshWardsRiskByIds([wardA.id], { wardsRepository, riskService });
+
+    expect(wardsRepository.listWards).not.toHaveBeenCalled();
+  });
+
+  it("refreshes exactly the given ids and counts updates", async () => {
+    const wardsRepository = buildWardsRepository([wardA, wardB]);
+    wardsRepository.getLatestFeatures = vi
+      .fn()
+      .mockImplementation(async (wardId: string) => ({ ...features, wardId }));
+    const riskService: RiskService = {
+      assessWard: vi.fn().mockImplementation(async (f: WardFeatures) => ({
+        wardId: f.wardId,
+        riskScore: 0.6,
+        riskLabel: "moderate",
+        contributingFactors: { water_fraction: 0.4 },
+      })),
+    };
+
+    const summary = await refreshWardsRiskByIds([wardA.id, wardB.id], { wardsRepository, riskService });
+
+    expect(summary).toEqual({ wardsChecked: 2, wardsUpdated: 2, wardsFailed: 0 });
+    expect(wardsRepository.updateCachedRisk).toHaveBeenCalledTimes(2);
+  });
+
+  it("counts a failure within the batch without stopping the rest", async () => {
+    const wardsRepository = buildWardsRepository([wardA, wardB]);
+    wardsRepository.getLatestFeatures = vi
+      .fn()
+      .mockImplementation(async (wardId: string) => ({ ...features, wardId }));
+    const riskService: RiskService = {
+      assessWard: vi.fn().mockImplementation(async (f: WardFeatures) => {
+        if (f.wardId === "ward-a") {
+          throw new Error("ml-service unreachable");
+        }
+        return { wardId: f.wardId, riskScore: 0.9, riskLabel: "high", contributingFactors: {} };
+      }),
+    };
+
+    const summary = await refreshWardsRiskByIds([wardA.id, wardB.id], { wardsRepository, riskService });
+
+    expect(summary).toEqual({ wardsChecked: 2, wardsUpdated: 1, wardsFailed: 1 });
+  });
+
+  it("returns all zeros for an empty id list", async () => {
+    const wardsRepository = buildWardsRepository([]);
+    const riskService: RiskService = { assessWard: vi.fn() };
+
+    const summary = await refreshWardsRiskByIds([], { wardsRepository, riskService });
+
+    expect(summary).toEqual({ wardsChecked: 0, wardsUpdated: 0, wardsFailed: 0 });
   });
 });

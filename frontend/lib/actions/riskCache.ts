@@ -41,3 +41,34 @@ export async function refreshRiskCacheAction(): Promise<RefreshRiskCacheResult> 
 
   return { error: null, summary: body.data };
 }
+
+export async function refreshWardRiskBatchAction(wardIds: string[]): Promise<RefreshRiskCacheResult> {
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    return { error: "not signed in", summary: null };
+  }
+
+  const response = await fetch(`${BACKEND_URL}/wards/risk/refresh-batch`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ wardIds }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({ message: "unknown error" }));
+    return { error: body.message ?? "failed to refresh batch", summary: null };
+  }
+
+  const body = (await response.json()) as {
+    data: { wardsChecked: number; wardsUpdated: number; wardsFailed: number };
+  };
+
+  return { error: null, summary: body.data };
+}

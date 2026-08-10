@@ -23,7 +23,7 @@ function GuideSection({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-24 border-t border-ink/8 py-8 first:border-t-0 first:pt-0">
+    <section id={id} className="scroll-mt-24 border-t border-ink/8 py-8 first:border-t-0">
       <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
       <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate">{children}</div>
     </section>
@@ -42,8 +42,8 @@ export default async function GuidePage() {
 
   return (
     <div>
-      <p className="eyebrow text-flood">Guide</p>
-      <h1 className="mt-2 font-display text-3xl font-semibold text-ink">Getting started with AquaWatch</h1>
+      <p className="eyebrow text-flood w-full">Guide</p>
+      <h1 className="mt-2 font-display text-3xl font-semiboldtext-ink">Getting started with AquaWatch</h1>
       <p className="mt-2 max-w-2xl text-sm text-slate-soft">
         This page explains what everything in your dashboard means and how to use it. If you&apos;re
         ever unsure what a screen is telling you, come back here.
